@@ -122,6 +122,6 @@ if (fileURLToPath(import.meta.url) === process.argv[1]) {
 			new Program().run()
 		})
 		.catch((error) => {
-			console.error("")
+			console.error(error)
 		})
 }
