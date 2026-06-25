@@ -1,9 +1,10 @@
+// @ts-check
 import fs from "node:fs"
 import path from "node:path"
 import slug from "slug"
 import IndexNow from "./IndexNow.mjs"
 import { Replicator } from "./Replicator.mjs"
-import StatusPersistence from "./StatusPersistence.mjs"
+import { StatusPersister } from "./persister/StatusPersister.mjs"
 import { JSDOM } from "jsdom"
 /** @todo Yet to be documented. */
 export class BaseProgram {
@@ -33,12 +34,15 @@ export class BaseProgram {
 	 */
 	atprotoAccountPassword = ""
 	/**@todo Yet to be documented.
+	 *
+	 * @type {string}
+	 */
 	standardSitePublicationUri = ""
 	/** @todo Split into various mezhods in which zhe user can override? It makes sense really, since I do have to go in and edit zhis mezhod to perform migrations. I should eizher stop doing zhat by providing sufficient configurations, or allow some extensive overrides. */
 	async run() {
 		const indexNow = new IndexNow(this.indexNowKey, this.siteHostName)
 		const resolvedPath = path.resolve(process.cwd(), this.contentPath)
-		const statusPersistence = new StatusPersistence("./state.json")
+		const statusPersistence = new StatusPersister("./state.json")
 		const a = (await Replicator.fileWalker(this.contentPath))?.filter((file) => file.endsWith(".md"))
 		if (!a) throw new Error("A is undefined.")
 		const agent = await Replicator.login(this.atprotoAccountHandle, this.atprotoAccountPassword)
