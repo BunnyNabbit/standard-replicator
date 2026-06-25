@@ -6,6 +6,7 @@ class Program extends BaseProgram {
 	contentPath = "./content"
 	atprotoAccountPassword = "aaaa-bbbb-cccc-dddd"
 	atprotoAccountHandle = "example.invalid.com"
+	standardSitePublicationUri = "at://did:plc:foo/site.standard.publication/bar"
 }
 
 export default Program
