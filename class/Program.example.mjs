@@ -4,7 +4,7 @@ class Program extends BaseProgram {
 	indexNowKey = "aaabbbccc"
 	siteHostName = "example.invalid.com"
 	contentPath = "./content"
-	atprotoAccountHandle = "aaaa-bbbb-cccc-dddd"
+	atprotoAccountPassword = "aaaa-bbbb-cccc-dddd"
 	atprotoAccountHandle = "example.invalid.com"
 }
 
