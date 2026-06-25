@@ -130,3 +130,8 @@ dist
 docs/
 *.d.mts
 *.d.mts.map
+
+# In which I am expected to be added by the user. I hold credentials, the keys.
+class/Program.mjs
+state.json
+
