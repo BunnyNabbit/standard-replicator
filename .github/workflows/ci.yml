@@ -26,10 +26,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install
       - name: Test
-        run: pnpm test
+        run: node --run test
       - name: Coveralls
         uses: coverallsapp/github-action@v2
         with:
           fail-on-error: false
       - name: Type check
-        run: pnpm run type-check
+        run: node --run type-check
