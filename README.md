@@ -1,20 +1,22 @@
-# _javascript-package-template_
+# _standard-replicator_
 
-<!-- [![npm package version badge.](https://img.shields.io/npm/v/celaria-formats.svg)](https://npmjs.com/package/celaria-formats) -->
-<!-- [![Open GitHub issues badge](https://img.shields.io/github/issues/bunnynabbit/celaria-formats)](https://github.com/BunnyNabbit/celaria-formats/issues) -->
-<!-- [![Coverage status badge.](https://coveralls.io/repos/github/BunnyNabbit/celaria-formats/badge.svg?branch=main)](https://coveralls.io/github/BunnyNabbit/celaria-formats?branch=main) -->
+[![Open GitHub issues badge](https://img.shields.io/github/issues/bunnynabbit/standard-replicator)](https://github.com/BunnyNabbit/standard-replicator/issues)
+[![Coverage status badge.](https://coveralls.io/repos/github/BunnyNabbit/standard-replicator/badge.svg?branch=main)](https://coveralls.io/github/BunnyNabbit/standard-replicator?branch=main)
 
-A template for _JavaScript_ packages. This is based on what I typically do when setting up a new package. This includes:
+> Yu  
+> re' 'sites' are "standardized,", huh? But why would you ever want to do that?  
+> — _Atypical Originator_
 
-- A basic object-oriented project scaffold.
-- Tests using _Jest_.
-- Type checking on explicitly checked _JavaScript_ files.
-- GitHub Actions workflow for CI and releasing packages.
-- Preset contribution policies, disallowing use of generative AI for code generation.
-- Formatting plug-ins and configuration.
+A _standard.site_ document generator for a collection of markdown files. Unlike [_Sequoia_](https://sequoia.pub/), it does not modify any source files. Instead, it creates documents with record keys based on content paths.
 
-## What's next?
+Example document: https://pdsls.dev/at://did:plc:rfescy2ghdk6ma2wwwhr3bu2/site.standard.document/quartz
 
-- [ ] Review and edit `package.json`.
-- [ ] Update *pnpm* with `corepack up`.
-- [ ] Yeet this README.
+## Setup
+
+- Ensure _Node.js_ is installed. This project was tested on _Node.js_ v24.
+- Ensure _pnpm_ is enabled with `corepack enable pnpm`.
+- Install dependencies with `pnpm install`.
+- Copy `class/Program.example.mjs` to `class/Program.mjs` and configure it.
+  - Know your ways? Take advantage of inheritance and extend some methods for extra customization.
+
+probably can run it with `node ./class/Program.mjs`.
