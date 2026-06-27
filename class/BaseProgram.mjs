@@ -5,7 +5,7 @@ import slug from "slug"
 import IndexNow from "./IndexNow.mjs"
 import { Replicator } from "./Replicator.mjs"
 import { StatusPersister } from "./persister/StatusPersister.mjs"
-import { JSDOM } from "jsdom"
+import { Parser } from "./Parser.mjs"
 /** @todo Yet to be documented. */
 export class BaseProgram {
 	/**@todo Yet to be documented.
@@ -49,21 +49,35 @@ export class BaseProgram {
 
 		for (const filePath of a) {
 			const doc = fs.readFileSync(filePath).toString()
-			let frontmatter = Replicator.extractFrontmatter(doc)
+			let frontmatter = {}
 			const relative = path.relative(resolvedPath, filePath)
 			let textContent = doc.trim()
-			let shouldPublish = false
-			determineIfIShouldPublish: {
-				if (frontmatter) {
-					textContent = doc.split("---")[2].trim()
-					if (frontmatter.error || frontmatter.publish === false) {
-						shouldPublish = false
-						break determineIfIShouldPublish
+			try {
+				frontmatter = await /** @type {typeof BaseProgram} */ (this.constructor).parserClass.parseYaml(textContent)
+				let shouldPublish = false
+				determineIfIShouldPublish: {
+					if (frontmatter) {
+						// FIXME: It doesn't quite work for different kinds of frontmatter. Looks to be ripe for breaking where frontmatter is also not present.
+						// Strip frontmatter if it exists.
+						const frontmatterDelimiter = "---"
+						if (doc.split("---")[2]) {
+							const splitDocument = doc.split(frontmatterDelimiter)
+							splitDocument.shift()
+							splitDocument.shift()
+							textContent = splitDocument.join("---")
+						}
+						if (frontmatter?.publish === false) {
+							shouldPublish = false
+							break determineIfIShouldPublish
+						}
+						shouldPublish = true
 					}
-					shouldPublish = true
 				}
+				if (!shouldPublish) continue
+			} catch (error) {
+				console.warn("Failed to parse frontmatter.", error)
+				continue
 			}
-			if (!shouldPublish) continue
 
 			const maxDescriptionLength = 350
 			const recordKey = slug(relative.slice(0, -2))
@@ -141,6 +155,7 @@ export class BaseProgram {
 		statusPersistence.persist()
 		indexNow.index()
 	}
+	static parserClass = Parser
 }
 
 export default BaseProgram

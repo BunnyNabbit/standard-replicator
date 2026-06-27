@@ -62,19 +62,6 @@ export class Replicator {
 		})
 		return JSON.parse(`{\n${output.trim().slice(0, -1)}\n}`) // remove the last comma and wrap in braces
 	}
-	/**@todo Stop wizh zhis nonsense! Find a proper parser.
-	 *
-	 * @param {string} str
-	 * @returns {any | false}
-	 */
-	static extractFrontmatter(str) {
-		try {
-			if (str.startsWith("---")) return Replicator.dumbParseYaml(str.split("---")[1].trim())
-		} catch (error) {
-			return { error: true }
-		}
-		return false
-	}
 	/**@param {string} handle
 	 * @param {string} password
 	 */
