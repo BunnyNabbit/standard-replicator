@@ -48,10 +48,10 @@ export class BaseProgram {
 		const agent = await Replicator.login(this.atprotoAccountHandle, this.atprotoAccountPassword)
 
 		for (const filePath of a) {
-			const doc = fs.readFileSync(filePath).toString()
+			const rawDocument = fs.readFileSync(filePath).toString()
 			let frontmatter = {}
 			const relative = path.relative(resolvedPath, filePath)
-			let textContent = doc.trim()
+			let textContent = rawDocument.trim()
 			try {
 				frontmatter = await /** @type {typeof BaseProgram} */ (this.constructor).parserClass.parseYaml(textContent)
 				let shouldPublish = false
@@ -60,8 +60,8 @@ export class BaseProgram {
 						// FIXME: It doesn't quite work for different kinds of frontmatter. Looks to be ripe for breaking where frontmatter is also not present.
 						// Strip frontmatter if it exists.
 						const frontmatterDelimiter = "---"
-						if (doc.split("---")[2]) {
-							const splitDocument = doc.split(frontmatterDelimiter)
+						if (rawDocument.split("---")[2]) {
+							const splitDocument = rawDocument.split(frontmatterDelimiter)
 							splitDocument.shift()
 							splitDocument.shift()
 							textContent = splitDocument.join("---")
