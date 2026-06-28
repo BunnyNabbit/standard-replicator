@@ -1,5 +1,5 @@
 {
-	"name": "change-me",
+	"name": "standard-replicator",
 	"version": "0.0.0",
 	"description": "Change me.",
 	"main": "index.mjs",
@@ -10,12 +10,12 @@
 		"type-check": "tsc --noEmit"
 	},
 	"keywords": [],
-	"homepage": "https://bunnynabbit.github.io/change-me/",
+	"homepage": "https://bunnynabbit.github.io/standard-replicator/",
 	"author": "BunnyNabbit \"Aon Langton\"",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/BunnyNabbit/change-me.git"
+		"url": "git+https://github.com/BunnyNabbit/standard-replicator.git"
 	},
 	"packageManager": "pnpm@10.34.2+sha512.9ae7e3fe477c52bbce1ddc8aa196ff243ed4b48f1ceaa7455820adfa7a48b5f57e817ed2d20e5f3c2c3646dfedba360567693e534572dccd252fb2eb8b7c044c",
 	"devDependencies": {
