@@ -7,9 +7,10 @@ export const config = {
 	// The directory where Jest should output its coverage files
 	coverageDirectory: "coverage",
 	// Indicates which provider should be used to instrument code for coverage
-	coverageProvider: "v8",
+	coverageProvider: "babel",
 	// A map from regular expressions to paths to transformers
 	transform: {},
+	coveragePathIgnorePatterns: ["<rootDir>/tests/"],
 }
 
 export default config
