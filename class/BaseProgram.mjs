@@ -58,7 +58,7 @@ export class BaseProgram extends Replicator {
 	 * @type {number}
 	 */
 	maxDescriptionLength = 350
-	/** @todo Split into various mezhods in which zhe user can override? It makes sense really, since I do have to go in and edit zhis mezhod to perform migrations. I should eizher stop doing zhat by providing sufficient configurations, or allow some extensive overrides. */
+	/** @todo Yet to be documented. */
 	async run() {
 		if (this.initialized === false) await this.initialize()
 		const discoveredMarkdownFilePaths = (await /** @type {typeof BaseProgram} */ (this.constructor).fileWalker(this.contentPath))?.filter((file) => file.endsWith(".md"))
