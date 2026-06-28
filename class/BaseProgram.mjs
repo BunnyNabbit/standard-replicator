@@ -16,44 +16,44 @@ export class BaseProgram extends Replicator {
 		/** @type {boolean} */
 		this.initialized = false
 	}
-	/**/
+	/** @todo Yet to be documented. */
 	async initialize() {
 		this.indexNow = new /** @type {typeof BaseProgram} */ (this.constructor).indexNowClass(this.indexNowKey, this.siteHostName)
 		this.resolvedPath = path.resolve(process.cwd(), this.contentPath)
 		this.statusPersistence = new /** @type {typeof BaseProgram} */ (this.constructor).statusPersisterClass("./state.json")
 		this.initialized = true
 	}
-	/**@todo Yet to be documented.
+	/**The _IndexNow_ key for requesting search engines to crawl pages.
 	 *
 	 * @type {string}
 	 */
 	indexNowKey = ""
-	/**@todo Yet to be documented.
+	/**The site hostname to associate the documents with.
 	 *
 	 * @type {string}
 	 */
 	siteHostName = ""
-	/**@todo Yet to be documented.
+	/**The directory path to the collection of markdown documents.
 	 *
 	 * @type {string}
 	 */
 	contentPath = ""
-	/**@todo Yet to be documented.
+	/**The AT Protocol account handle.
 	 *
 	 * @type {string}
 	 */
 	atprotoAccountHandle = ""
-	/**@todo Yet to be documented.
+	/**The AT Protocol account password.
 	 *
 	 * @type {string}
 	 */
 	atprotoAccountPassword = ""
-	/**@todo Yet to be documented.
+	/**The URI of the publication to associate documents with.
 	 *
 	 * @type {string}
 	 */
 	standardSitePublicationUri = ""
-	/**@todo Yet to be documented.
+	/**The maximum length in character of the description.
 	 *
 	 * @type {number}
 	 */
@@ -109,7 +109,9 @@ export class BaseProgram extends Replicator {
 		this.statusPersistence.persist()
 		this.indexNow.index()
 	}
-	/**@param {Document} document
+	/**@todo Yet to be documented.
+	 *
+	 * @param {Document} document
 	 * @returns
 	 */
 	async getDescription(document) {
@@ -136,7 +138,7 @@ export class BaseProgram extends Replicator {
 	recordKeySlugify(relativeFilePath) {
 		return slug(relativeFilePath.slice(0, -2))
 	}
-	/**@todo Override me. I wannt to be Orveriiddeen..... pelase... please!
+	/**Determines if the provided frontmatter is to publish the document.
 	 *
 	 * @param {any} frontmatter
 	 * @returns
@@ -146,7 +148,7 @@ export class BaseProgram extends Replicator {
 		if (frontmatter?.publish === false) return false
 		return true
 	}
-	/**@todo Yet to be documented.
+	/**Updates or creates the {@link record|standard.site document} to the account's personal data server.
 	 *
 	 * @todo Upload cover images https://github.com/BunnyNabbit/standard-replicator/issues/4
 	 *
