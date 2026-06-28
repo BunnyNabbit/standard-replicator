@@ -6,6 +6,8 @@ import IndexNow from "./IndexNow.mjs"
 import { Replicator } from "./Replicator.mjs"
 import { StatusPersister } from "./persister/StatusPersister.mjs"
 import { Parser } from "./Parser.mjs"
+import { Document } from "./Document.mjs"
+/** @import {StandardSiteDocumentRecord} from "../types/StandardSiteDocumentRecord.mts" */
 /** @todo Yet to be documented. */
 export class BaseProgram {
 	/**@todo Yet to be documented.
@@ -44,60 +46,53 @@ export class BaseProgram {
 		const resolvedPath = path.resolve(process.cwd(), this.contentPath)
 		const statusPersistence = new StatusPersister("./state.json")
 		const discoveredMarkdownFilePaths = (await Replicator.fileWalker(this.contentPath))?.filter((file) => file.endsWith(".md"))
-		if (!discoveredMarkdownFilePaths) throw new Error("A is undefined.")
+		if (!discoveredMarkdownFilePaths) throw new Error("Unable to discover documents.") // TODO: Probably can't be reached?
+		/** @type {Document[]} */
+		const documents = discoveredMarkdownFilePaths.map((file) => {
+			return Document.fromFileSystem(file)
+		})
 		this.agent = await Replicator.login(this.atprotoAccountHandle, this.atprotoAccountPassword)
 
-		for (const filePath of discoveredMarkdownFilePaths) {
-			const rawDocument = fs.readFileSync(filePath).toString()
-			let frontmatter = {}
-			const relative = path.relative(resolvedPath, filePath)
-			let textContent = rawDocument.trim()
-			try {
-				frontmatter = await /** @type {typeof BaseProgram} */ (this.constructor).parserClass.parseYaml(textContent)
-				if (frontmatter) {
-					// FIXME: It doesn't quite work for different kinds of frontmatter. Looks to be ripe for breaking where frontmatter is also not present.
-					// Strip frontmatter if it exists.
-					const frontmatterDelimiter = "---"
-					if (rawDocument.split("---")[2]) {
-						const splitDocument = rawDocument.split(frontmatterDelimiter)
-						splitDocument.shift()
-						splitDocument.shift()
-						textContent = splitDocument.join("---")
-					}
-					if (this.isSuitableToPublish(frontmatter)) continue
-				}
-			} catch (error) {
-				console.warn("Failed to parse frontmatter.", error)
-				continue
-			}
+		for (const document of documents) {
+			let textContent = document.content
+			let frontmatter = await document.frontmatter
+			if (!this.isSuitableToPublish(frontmatter)) continue
 
+			const relative = path.relative(resolvedPath, document.filePath)
 			const maxDescriptionLength = 350
+			/** @type {string} */
 			const recordKey = slug(relative.slice(0, -2))
-			const statResult = fs.statSync(filePath)
-			const lastModifiedDate = new Date(statResult.mtimeMs).toISOString()
+			const fileStats = document.fileStats
+			const lastModifiedDate = new Date(fileStats.mtimeMs).toISOString()
 			const existingPersistenceState = statusPersistence.get(recordKey)
 			const title = frontmatter.title ?? path.basename(relative.slice(0, -3))
 			let description = frontmatter.description ?? textContent.slice(0, maxDescriptionLength)
 			if (description.length === maxDescriptionLength) description += "..."
 			let quartzPath = encodeURI(relative.slice(0, -3).replaceAll(" ", "-")).replaceAll("%5C", "/")
 			if (quartzPath === "index") quartzPath = ""
-			/** @type {string} */
-			let publishedAtDate
+			/** @type {StandardSiteDocumentRecord} */
+			const standardSiteRecord = {
+				site: this.standardSitePublicationUri,
+				path: `/${quartzPath}`,
+				title,
+				description: description,
+				textContent,
+			}
 			if (existingPersistenceState) {
 				if (existingPersistenceState.lastModifiedDate === lastModifiedDate) continue
 				//Update existing record
-				publishedAtDate = existingPersistenceState.publishedDate
+				standardSiteRecord.publishedAt = existingPersistenceState.publishedDate
 				existingPersistenceState.lastModifiedDate = lastModifiedDate
 			} else {
 				// Create new record
-				publishedAtDate = lastModifiedDate
+				standardSiteRecord.publishedAt = lastModifiedDate
 				statusPersistence.set(recordKey, {
 					lastModifiedDate,
 					publishedDate: lastModifiedDate,
 				})
 				statusPersistence.persist()
 			}
-			this.putStandardSiteDocumentRecord(recordKey, quartzPath, title, description, textContent, publishedAtDate)
+			this.putStandardSiteDocumentRecord(standardSiteRecord, recordKey)
 			indexNow.enqueue(quartzPath)
 			await Replicator.sleep(1000)
 		}
@@ -110,6 +105,7 @@ export class BaseProgram {
 	 * @returns
 	 */
 	isSuitableToPublish(frontmatter) {
+		if (!frontmatter) return false // Failed to parse.
 		if (frontmatter?.publish === false) return false
 		return true
 	}
@@ -117,34 +113,14 @@ export class BaseProgram {
 	 *
 	 * @todo Upload cover images https://github.com/BunnyNabbit/standard-replicator/issues/4
 	 *
-	 * @param {any} recordKey
-	 * @param {string} quartzPath
-	 * @param {any} title
-	 * @param {any} description
-	 * @param {string} textContent
-	 * @param {string} publishedAtDate
+	 * @param {StandardSiteDocumentRecord} record
+	 * @param {string} recordKey
 	 */
-	putStandardSiteDocumentRecord(recordKey, quartzPath, title, description, textContent, publishedAtDate) {
+	putStandardSiteDocumentRecord(record, recordKey) {
 		this.agent.com.atproto.repo.putRecord({
 			collection: "site.standard.document",
 			rkey: recordKey,
-			record: {
-				site: this.standardSitePublicationUri,
-				path: "/" + quartzPath,
-				title: title,
-				description: description,
-				// coverImage: {
-				// 	$type: "blob",
-				// 	ref: {
-				// 		$link: "bafkreiexample123456789",
-				// 	},
-				// 	mimeType: "image/jpeg",
-				// 	size: 245678,
-				// },
-				textContent: textContent,
-				// tags: ["tutorial", "atproto"],
-				publishedAt: publishedAtDate,
-			},
+			record,
 			repo: this.atprotoAccountHandle,
 		})
 	}
