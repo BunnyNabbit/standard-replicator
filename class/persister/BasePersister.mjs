@@ -28,7 +28,11 @@ export class BasePersister {
 	}
 
 	restoreRecord() {
-		this.record = JSON.parse(fs.readFileSync(this.file).toString())
+		if (fs.existsSync(this.file)) {
+			this.record = JSON.parse(fs.readFileSync(this.file).toString())
+			return
+		}
+		this.record = {}
 	}
 
 	persist() {
