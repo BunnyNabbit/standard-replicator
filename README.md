@@ -19,4 +19,4 @@ Example document: https://pdsls.dev/at://did:plc:rfescy2ghdk6ma2wwwhr3bu2/site.s
 - Copy `class/Program.example.mjs` to `class/Program.mjs` and configure it.
   - Know your ways? Take advantage of inheritance and extend some methods for extra customization.
 
-probably can run it with `node ./class/Program.mjs`.
+probably can run it with `node ./class/Replicator.mjs`.
