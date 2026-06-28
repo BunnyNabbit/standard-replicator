@@ -86,7 +86,6 @@ export class BaseProgram {
 			if (existingPersistenceState) {
 				if (existingPersistenceState.lastModifiedDate === lastModifiedDate) continue
 				//Update existing record
-				this.putStandardSiteDocumentRecord(recordKey, quartzPath, title, description, textContent, existingPersistenceState.publishedDate)
 				publishedAtDate = existingPersistenceState.publishedDate
 				existingPersistenceState.lastModifiedDate = lastModifiedDate
 			} else {
