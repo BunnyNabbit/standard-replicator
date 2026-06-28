@@ -43,11 +43,11 @@ export class BaseProgram {
 		const indexNow = new IndexNow(this.indexNowKey, this.siteHostName)
 		const resolvedPath = path.resolve(process.cwd(), this.contentPath)
 		const statusPersistence = new StatusPersister("./state.json")
-		const a = (await Replicator.fileWalker(this.contentPath))?.filter((file) => file.endsWith(".md"))
-		if (!a) throw new Error("A is undefined.")
+		const discoveredMarkdownFilePaths = (await Replicator.fileWalker(this.contentPath))?.filter((file) => file.endsWith(".md"))
+		if (!discoveredMarkdownFilePaths) throw new Error("A is undefined.")
 		this.agent = await Replicator.login(this.atprotoAccountHandle, this.atprotoAccountPassword)
 
-		for (const filePath of a) {
+		for (const filePath of discoveredMarkdownFilePaths) {
 			const rawDocument = fs.readFileSync(filePath).toString()
 			let frontmatter = {}
 			const relative = path.relative(resolvedPath, filePath)
