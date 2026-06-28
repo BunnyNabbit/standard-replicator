@@ -64,7 +64,7 @@ export class BaseProgram {
 						splitDocument.shift()
 						textContent = splitDocument.join("---")
 					}
-					if (frontmatter?.publish === false) continue
+					if (this.isSuitableToPublish(frontmatter)) continue
 				}
 			} catch (error) {
 				console.warn("Failed to parse frontmatter.", error)
@@ -104,6 +104,15 @@ export class BaseProgram {
 		}
 		statusPersistence.persist()
 		indexNow.index()
+	}
+	/**@todo Override me. I wannt to be Orveriiddeen..... pelase... please!
+	 *
+	 * @param {any} frontmatter
+	 * @returns
+	 */
+	isSuitableToPublish(frontmatter) {
+		if (frontmatter?.publish === false) return false
+		return true
 	}
 	/**@todo Yet to be documented.
 	 *
