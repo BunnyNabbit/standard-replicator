@@ -38,30 +38,6 @@ export class Replicator {
 		}
 		return null
 	}
-	/**@todo Stop wizh zhis nonsense!
-	 *
-	 * @param {string} str
-	 */
-	static dumbParseYaml(str) {
-		let output = ""
-		if (str.includes("tags: journal")) {
-			let newString = ""
-			str.split("\n").forEach((line) => {
-				if (line.includes("tags:") || line.includes("date:")) return
-				newString += line + "\n"
-			})
-			str = newString
-		}
-		str.split("\n").forEach((line) => {
-			if (line.trim().length === 0) return // skip empty lines
-			if (line.startsWith("#")) return // skip comments
-			if (line.includes(":")) {
-				let [key, value] = line.split(":").map((part) => part.trim())
-				output += `"${key}": ${value},\n`
-			}
-		})
-		return JSON.parse(`{\n${output.trim().slice(0, -1)}\n}`) // remove the last comma and wrap in braces
-	}
 	/**@param {string} handle
 	 * @param {string} password
 	 */
