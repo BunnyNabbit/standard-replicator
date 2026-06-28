@@ -54,26 +54,18 @@ export class BaseProgram {
 			let textContent = rawDocument.trim()
 			try {
 				frontmatter = await /** @type {typeof BaseProgram} */ (this.constructor).parserClass.parseYaml(textContent)
-				let shouldPublish = false
-				determineIfIShouldPublish: {
-					if (frontmatter) {
-						// FIXME: It doesn't quite work for different kinds of frontmatter. Looks to be ripe for breaking where frontmatter is also not present.
-						// Strip frontmatter if it exists.
-						const frontmatterDelimiter = "---"
-						if (rawDocument.split("---")[2]) {
-							const splitDocument = rawDocument.split(frontmatterDelimiter)
-							splitDocument.shift()
-							splitDocument.shift()
-							textContent = splitDocument.join("---")
-						}
-						if (frontmatter?.publish === false) {
-							shouldPublish = false
-							break determineIfIShouldPublish
-						}
-						shouldPublish = true
+				if (frontmatter) {
+					// FIXME: It doesn't quite work for different kinds of frontmatter. Looks to be ripe for breaking where frontmatter is also not present.
+					// Strip frontmatter if it exists.
+					const frontmatterDelimiter = "---"
+					if (rawDocument.split("---")[2]) {
+						const splitDocument = rawDocument.split(frontmatterDelimiter)
+						splitDocument.shift()
+						splitDocument.shift()
+						textContent = splitDocument.join("---")
 					}
+					if (frontmatter?.publish === false) continue
 				}
-				if (!shouldPublish) continue
 			} catch (error) {
 				console.warn("Failed to parse frontmatter.", error)
 				continue
