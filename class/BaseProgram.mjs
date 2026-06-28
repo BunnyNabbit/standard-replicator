@@ -45,7 +45,7 @@ export class BaseProgram {
 		const statusPersistence = new StatusPersister("./state.json")
 		const a = (await Replicator.fileWalker(this.contentPath))?.filter((file) => file.endsWith(".md"))
 		if (!a) throw new Error("A is undefined.")
-		const agent = await Replicator.login(this.atprotoAccountHandle, this.atprotoAccountPassword)
+		this.agent = await Replicator.login(this.atprotoAccountHandle, this.atprotoAccountPassword)
 
 		for (const filePath of a) {
 			const rawDocument = fs.readFileSync(filePath).toString()
@@ -89,71 +89,64 @@ export class BaseProgram {
 			if (description.length === maxDescriptionLength) description += "..."
 			let quartzPath = encodeURI(relative.slice(0, -3).replaceAll(" ", "-")).replaceAll("%5C", "/")
 			if (quartzPath === "index") quartzPath = ""
+			/** @type {string} */
+			let publishedAtDate
 			if (existingPersistenceState) {
 				if (existingPersistenceState.lastModifiedDate === lastModifiedDate) continue
-				// if (quartzPath === encodeURI(relative.slice(0, -3)).replaceAll("%5C", "/")) continue
 				//Update existing record
-				agent.com.atproto.repo.putRecord({
-					collection: "site.standard.document",
-					rkey: recordKey,
-					record: {
-						site: this.standardSitePublicationUri,
-						path: "/" + quartzPath,
-						title: title,
-						description: description,
-						// coverImage: {
-						// 	$type: "blob",
-						// 	ref: {
-						// 		$link: "bafkreiexample123456789",
-						// 	},
-						// 	mimeType: "image/jpeg",
-						// 	size: 245678,
-						// },
-						textContent: textContent,
-						// tags: ["tutorial", "atproto"],
-						publishedAt: existingPersistenceState.publishedDate,
-					},
-					repo: this.atprotoAccountHandle,
-				})
+				this.putStandardSiteDocumentRecord(recordKey, quartzPath, title, description, textContent, existingPersistenceState.publishedDate)
+				publishedAtDate = existingPersistenceState.publishedDate
 				existingPersistenceState.lastModifiedDate = lastModifiedDate
-				// let indexPath = quartzPath
-				indexNow.enqueue(quartzPath)
-				await Replicator.sleep(1000)
 			} else {
 				// Create new record
-				agent.com.atproto.repo.putRecord({
-					collection: "site.standard.document",
-					rkey: recordKey,
-					record: {
-						site: this.standardSitePublicationUri,
-						path: "/" + quartzPath,
-						title: title,
-						description: description,
-						// coverImage: {
-						// 	$type: "blob",
-						// 	ref: {
-						// 		$link: "bafkreiexample123456789",
-						// 	},
-						// 	mimeType: "image/jpeg",
-						// 	size: 245678,
-						// },
-						textContent: textContent,
-						// tags: ["tutorial", "atproto"],
-						publishedAt: lastModifiedDate,
-					},
-					repo: this.atprotoAccountHandle,
-				})
-				indexNow.enqueue(quartzPath)
+				publishedAtDate = lastModifiedDate
 				statusPersistence.set(recordKey, {
 					lastModifiedDate,
 					publishedDate: lastModifiedDate,
 				})
 				statusPersistence.persist()
-				await Replicator.sleep(1000)
 			}
+			this.putStandardSiteDocumentRecord(recordKey, quartzPath, title, description, textContent, publishedAtDate)
+			indexNow.enqueue(quartzPath)
+			await Replicator.sleep(1000)
 		}
 		statusPersistence.persist()
 		indexNow.index()
+	}
+	/**@todo Yet to be documented.
+	 *
+	 * @todo Upload cover images https://github.com/BunnyNabbit/standard-replicator/issues/4
+	 *
+	 * @param {any} recordKey
+	 * @param {string} quartzPath
+	 * @param {any} title
+	 * @param {any} description
+	 * @param {string} textContent
+	 * @param {string} publishedAtDate
+	 */
+	putStandardSiteDocumentRecord(recordKey, quartzPath, title, description, textContent, publishedAtDate) {
+		this.agent.com.atproto.repo.putRecord({
+			collection: "site.standard.document",
+			rkey: recordKey,
+			record: {
+				site: this.standardSitePublicationUri,
+				path: "/" + quartzPath,
+				title: title,
+				description: description,
+				// coverImage: {
+				// 	$type: "blob",
+				// 	ref: {
+				// 		$link: "bafkreiexample123456789",
+				// 	},
+				// 	mimeType: "image/jpeg",
+				// 	size: 245678,
+				// },
+				textContent: textContent,
+				// tags: ["tutorial", "atproto"],
+				publishedAt: publishedAtDate,
+			},
+			repo: this.atprotoAccountHandle,
+		})
 	}
 	static parserClass = Parser
 }
