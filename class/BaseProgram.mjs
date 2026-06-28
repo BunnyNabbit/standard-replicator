@@ -9,7 +9,20 @@ import { Parser } from "./Parser.mjs"
 import { Document } from "./Document.mjs"
 /** @import {StandardSiteDocumentRecord} from "../types/StandardSiteDocumentRecord.mts" */
 /** @todo Yet to be documented. */
-export class BaseProgram {
+export class BaseProgram extends Replicator {
+	/**/
+	constructor() {
+		super()
+		/** @type {boolean} */
+		this.initialized = false
+	}
+	/**/
+	async initialize() {
+		this.indexNow = new IndexNow(this.indexNowKey, this.siteHostName)
+		this.resolvedPath = path.resolve(process.cwd(), this.contentPath)
+		this.statusPersistence = new StatusPersister("./state.json")
+		this.initialized = true
+	}
 	/**@todo Yet to be documented.
 	 *
 	 * @type {string}
@@ -40,41 +53,38 @@ export class BaseProgram {
 	 * @type {string}
 	 */
 	standardSitePublicationUri = ""
+	/**@todo Yet to be documented.
+	 *
+	 * @type {number}
+	 */
+	maxDescriptionLength = 350
 	/** @todo Split into various mezhods in which zhe user can override? It makes sense really, since I do have to go in and edit zhis mezhod to perform migrations. I should eizher stop doing zhat by providing sufficient configurations, or allow some extensive overrides. */
 	async run() {
-		const indexNow = new IndexNow(this.indexNowKey, this.siteHostName)
-		const resolvedPath = path.resolve(process.cwd(), this.contentPath)
-		const statusPersistence = new StatusPersister("./state.json")
-		const discoveredMarkdownFilePaths = (await Replicator.fileWalker(this.contentPath))?.filter((file) => file.endsWith(".md"))
+		if (this.initialized === false) await this.initialize()
+		const discoveredMarkdownFilePaths = (await /** @type {typeof BaseProgram} */ (this.constructor).fileWalker(this.contentPath))?.filter((file) => file.endsWith(".md"))
 		if (!discoveredMarkdownFilePaths) throw new Error("Unable to discover documents.") // TODO: Probably can't be reached?
 		/** @type {Document[]} */
-		const documents = discoveredMarkdownFilePaths.map((file) => {
-			return Document.fromFileSystem(file)
+		const documents = discoveredMarkdownFilePaths.map((filePath) => {
+			return Document.fromFileSystem(filePath)
 		})
-		this.agent = await Replicator.login(this.atprotoAccountHandle, this.atprotoAccountPassword)
+		this.agent = await /** @type {typeof BaseProgram} */ (this.constructor).login(this.atprotoAccountHandle, this.atprotoAccountPassword)
 
 		for (const document of documents) {
 			let textContent = document.content
 			let frontmatter = await document.frontmatter
 			if (!this.isSuitableToPublish(frontmatter)) continue
 
-			const relative = path.relative(resolvedPath, document.filePath)
-			const maxDescriptionLength = 350
-			/** @type {string} */
-			const recordKey = slug(relative.slice(0, -2))
-			const fileStats = document.fileStats
-			const lastModifiedDate = new Date(fileStats.mtimeMs).toISOString()
-			const existingPersistenceState = statusPersistence.get(recordKey)
-			const title = frontmatter.title ?? path.basename(relative.slice(0, -3))
-			let description = frontmatter.description ?? textContent.slice(0, maxDescriptionLength)
-			if (description.length === maxDescriptionLength) description += "..."
-			let quartzPath = encodeURI(relative.slice(0, -3).replaceAll(" ", "-")).replaceAll("%5C", "/")
-			if (quartzPath === "index") quartzPath = ""
+			const relativeFilePath = path.relative(this.resolvedPath, document.filePath)
+			const recordKey = this.recordKeySlugify(relativeFilePath)
+			const lastModifiedDate = new Date(document.fileStats.mtimeMs).toISOString()
+			const existingPersistenceState = this.statusPersistence.get(recordKey)
+			const description = await this.getDescription(document)
+			const pathSlug = this.pathSlugify(relativeFilePath)
 			/** @type {StandardSiteDocumentRecord} */
 			const standardSiteRecord = {
 				site: this.standardSitePublicationUri,
-				path: `/${quartzPath}`,
-				title,
+				path: `/${pathSlug}`,
+				title: frontmatter.title ?? path.basename(relativeFilePath.slice(0, -3)),
 				description: description,
 				textContent,
 			}
@@ -86,18 +96,45 @@ export class BaseProgram {
 			} else {
 				// Create new record
 				standardSiteRecord.publishedAt = lastModifiedDate
-				statusPersistence.set(recordKey, {
+				this.statusPersistence.set(recordKey, {
 					lastModifiedDate,
 					publishedDate: lastModifiedDate,
 				})
-				statusPersistence.persist()
+				this.statusPersistence.persist()
 			}
 			this.putStandardSiteDocumentRecord(standardSiteRecord, recordKey)
-			indexNow.enqueue(quartzPath)
-			await Replicator.sleep(1000)
+			this.indexNow.enqueue(pathSlug)
+			await /** @type {typeof BaseProgram} */ (this.constructor).sleep(1000)
 		}
-		statusPersistence.persist()
-		indexNow.index()
+		this.statusPersistence.persist()
+		this.indexNow.index()
+	}
+	/**@param {Document} document
+	 * @returns
+	 */
+	async getDescription(document) {
+		const frontmatter = await document.frontmatter
+		let description = frontmatter?.description ?? document.content.slice(0, this.maxDescriptionLength)
+		if (description.length === this.maxDescriptionLength) description += "..."
+		return description
+	}
+	/**@todo Yet to be documented.
+	 *
+	 * @param {string} relativeFilePath The file path relative to the content directory. i.e.: `People/Son of jackson.md`.
+	 * @returns {string}
+	 */
+	pathSlugify(relativeFilePath) {
+		let slug = encodeURI(relativeFilePath.slice(0, -3).replaceAll(" ", "-")).replaceAll("%5C", "/")
+		if (slug === "index") slug = ""
+		return slug
+	}
+	/**@todo Yet to be documented.
+	 *
+	 * @param {string} relativeFilePath The file path relative to the content directory. i.e.: `People/Son of jackson.md`.
+	 * @returns {string}
+	 */
+	recordKeySlugify(relativeFilePath) {
+		return slug(relativeFilePath.slice(0, -2))
 	}
 	/**@todo Override me. I wannt to be Orveriiddeen..... pelase... please!
 	 *
