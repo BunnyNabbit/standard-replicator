@@ -18,9 +18,9 @@ export class BaseProgram extends Replicator {
 	}
 	/**/
 	async initialize() {
-		this.indexNow = new IndexNow(this.indexNowKey, this.siteHostName)
+		this.indexNow = new /** @type {typeof BaseProgram} */ (this.constructor).indexNowClass(this.indexNowKey, this.siteHostName)
 		this.resolvedPath = path.resolve(process.cwd(), this.contentPath)
-		this.statusPersistence = new StatusPersister("./state.json")
+		this.statusPersistence = new /** @type {typeof BaseProgram} */ (this.constructor).statusPersisterClass("./state.json")
 		this.initialized = true
 	}
 	/**@todo Yet to be documented.
@@ -162,6 +162,8 @@ export class BaseProgram extends Replicator {
 		})
 	}
 	static parserClass = Parser
+	static indexNowClass = IndexNow
+	static statusPersisterClass = StatusPersister
 }
 
 export default BaseProgram
