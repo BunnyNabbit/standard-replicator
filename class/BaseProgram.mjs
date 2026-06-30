@@ -8,6 +8,12 @@ import { StatusPersister } from "./persister/StatusPersister.mjs"
 import { Parser } from "./Parser.mjs"
 import { Document } from "./Document.mjs"
 /** @import {StandardSiteDocumentRecord} from "../types/StandardSiteDocumentRecord.mts" */
+/**@import {
+ *   Result,
+ *   ResultWithRecord,
+ *   RunResult
+ * } from "../types/RunResult.mts"
+ */
 /** @todo Yet to be documented. */
 export class BaseProgram extends Replicator {
 	/**/
@@ -58,9 +64,14 @@ export class BaseProgram extends Replicator {
 	 * @type {number}
 	 */
 	maxDescriptionLength = 350
-	/** @todo Yet to be documented. */
+	/**@todo Yet to be documented.
+	 *
+	 * @returns {Promise<RunResult>}
+	 */
 	async run() {
 		if (this.initialized === false) await this.initialize()
+		/** @type {RunResult} */
+		const runResults = []
 		const discoveredMarkdownFilePaths = (await /** @type {typeof BaseProgram} */ (this.constructor).fileWalker(this.contentPath))?.filter((file) => file.endsWith(".md"))
 		if (!discoveredMarkdownFilePaths) throw new Error("Unable to discover documents.") // TODO: Probably can't be reached?
 		/** @type {Document[]} */
@@ -72,7 +83,13 @@ export class BaseProgram extends Replicator {
 		for (const document of documents) {
 			let textContent = document.content
 			let frontmatter = await document.frontmatter
-			if (!this.isSuitableToPublish(frontmatter)) continue
+			if (!this.isSuitableToPublish(frontmatter)) {
+				runResults.push({
+					status: "skipped",
+					document,
+				})
+				continue
+			}
 
 			const relativeFilePath = path.relative(this.resolvedPath, document.filePath)
 			const recordKey = this.recordKeySlugify(relativeFilePath)
@@ -88,6 +105,8 @@ export class BaseProgram extends Replicator {
 				description: description,
 				textContent,
 			}
+			/** @type {Result | ResultWithRecord} */
+			let runResult
 			if (existingPersistenceState) {
 				if (existingPersistenceState.lastModifiedDate === lastModifiedDate) continue
 				//Update existing record
@@ -101,13 +120,28 @@ export class BaseProgram extends Replicator {
 					publishedDate: lastModifiedDate,
 				})
 				this.statusPersistence.persist()
+				runResult = {
+					status: "new",
+					document,
+					record: standardSiteRecord,
+					recordKey,
+				}
+			}
 			}
 			this.putStandardSiteDocumentRecord(standardSiteRecord, recordKey)
 			this.indexNow.enqueue(pathSlug)
+			runResult = {
+				status: "updated",
+				document,
+				record: standardSiteRecord,
+				recordKey,
+			}
+			runResults.push(runResult)
 			await /** @type {typeof BaseProgram} */ (this.constructor).sleep(1000)
 		}
 		this.statusPersistence.persist()
 		this.indexNow.index()
+		return runResults
 	}
 	/**@todo Yet to be documented.
 	 *

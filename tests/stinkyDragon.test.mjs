@@ -2,8 +2,9 @@ import { BaseProgram } from "../class/BaseProgram.mjs"
 import { NullNow } from "./fixtures/class/NullNow.mjs"
 import { jest } from "@jest/globals"
 import { NullStatusPersister } from "./fixtures/class/NullStatusPersister.mjs"
+import path from "node:path"
 jest.mock("./fixtures/class/NullNow.mjs")
-
+/** @import {RunResult} from "../types/RunResult.mts" */
 class StinkyDragonProgram extends BaseProgram {
 	indexNowKey = "foobar"
 	siteHostName = "stinky-dragon.invalid"
@@ -34,12 +35,28 @@ class StinkyDragonProgram extends BaseProgram {
 	static statusPersisterClass = NullStatusPersister
 }
 
+/**@param {RunResult} results
+ * @param {string} absolutePath
+ */
+function findResultByPath(results, absolutePath) {
+	return results.find((result) => result.document.filePath === absolutePath)
+}
+
 describe("Stinky Dragon's notes", () => {
 	it("should be standardized", async () => {
 		const program = new StinkyDragonProgram()
 		await program.initialize()
 		const indexSpy = jest.spyOn(program.indexNow, "index")
-		await program.run()
+		const results = await program.run()
+		/**@param {RunResult} results
+		 * @param {string} absolutePath
+		 */
+		const resultOf = (relativeFilePath) => {
+			const absoluteFilePath = path.resolve(program.resolvedPath, relativeFilePath)
+			return results.find((result) => result.document.filePath === absolutePath)
+		}
+		expect(findResultByPath(results).status).toBe("skipped")
+		expect(findResultByPath(results, path.resolve(program.resolvedPath, "draft.md")).status).toBe("skipped")
 		expect(indexSpy).toHaveBeenCalledTimes(1)
 	})
 })
