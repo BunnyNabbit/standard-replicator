@@ -1,5 +1,4 @@
 // @ts-check
-import fs from "node:fs"
 import path from "node:path"
 import slug from "slug"
 import IndexNow from "./IndexNow.mjs"
