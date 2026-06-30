@@ -1,4 +1,4 @@
-# _standard-replicator_
+# _Site standardizer_
 
 [![Open GitHub issues badge](https://img.shields.io/github/issues/bunnynabbit/standard-replicator)](https://github.com/BunnyNabbit/standard-replicator/issues)
 [![Coverage status badge.](https://coveralls.io/repos/github/BunnyNabbit/standard-replicator/badge.svg?branch=main)](https://coveralls.io/github/BunnyNabbit/standard-replicator?branch=main)
