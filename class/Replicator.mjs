@@ -61,17 +61,28 @@ export class Replicator {
 			setTimeout(resolve, time)
 		})
 	}
-	/** @param {string | URL | Request} pageUrl */
+	/**@param {string | URL | Request} pageUrl
+	 * @returns {Promise<ArrayBuffer | null>}
+	 */
 	static fetchCover(pageUrl) {
-		fetch(pageUrl).then(async (response) => {
-			const html = await response.text()
-			const parsedDocumentObjectModel = new JSDOM(html)
-			const openGraphImageProperty = parsedDocumentObjectModel.window.document.querySelector('meta[property="og:image"]')
-			if (openGraphImageProperty) {
-				const coverUrl = openGraphImageProperty.getAttribute("content")
-				console.log(coverUrl)
-			}
-		})
+		return fetch(pageUrl)
+			.then(async (response) => {
+				const html = await response.text()
+				const parsedDocumentObjectModel = new JSDOM(html)
+				const openGraphImageProperty = parsedDocumentObjectModel.window.document.querySelector('meta[property="og:image"]')
+				if (openGraphImageProperty) {
+					const coverUrl = openGraphImageProperty.getAttribute("content")
+					const coverArrayBuffer = await fetch(coverUrl).then((response) => {
+						return response.arrayBuffer()
+					})
+					return coverArrayBuffer
+				}
+				return null
+			})
+			.catch((error) => {
+				// TODO: It might make sense to throw the error? So BaseProgram doesn't end up deleting covers?
+				return null
+			})
 	}
 }
 

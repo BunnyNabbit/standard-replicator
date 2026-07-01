@@ -126,6 +126,16 @@ export class BaseProgram extends Replicator {
 					recordKey,
 				}
 			}
+			// TODO: it's probably not a safe assumption to use https://
+			const coverArrayBuffer = await /** @type {typeof Replicator} */ (this.constructor).fetchCover(`https://${this.siteHostName}/${pathSlug}`)
+			if (coverArrayBuffer) {
+				await this.uploadBlob(coverArrayBuffer)
+					.then((coverBlob) => {
+						standardSiteRecord.coverImage = coverBlob
+					})
+					.catch((error) => {
+						console.warn(`Failed while uploading blob to ${recordKey}.`, error)
+					})
 			}
 			this.putStandardSiteDocumentRecord(standardSiteRecord, recordKey)
 			this.indexNow.enqueue(pathSlug)
@@ -195,6 +205,11 @@ export class BaseProgram extends Replicator {
 			record,
 			repo: this.atprotoAccountHandle,
 		})
+	}
+	/** Uploads a binary large object to the account's personal data server. */
+	async uploadBlob(data) {
+		const blob = (await this.agent.uploadBlob(data)).data.blob
+		return blob
 	}
 	static parserClass = Parser
 	static indexNowClass = IndexNow
