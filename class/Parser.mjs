@@ -2,6 +2,7 @@
 import remarkFrontmatter from "remark-frontmatter"
 import remarkStringify from "remark-stringify"
 import remarkParse from "remark-parse"
+import stripMarkdown from "strip-markdown"
 import { unified } from "unified"
 import { matter } from "vfile-matter"
 
@@ -23,6 +24,14 @@ export class Parser {
 			})
 			.process(string)
 		return file.data.matter
+	}
+	/**@todo Yet to be documented.
+	 *
+	 * @returns {Promise<string>}
+	 */
+	static async stripMarkdown(string) {
+		// TODO: hacky types. Use VFile from unified.
+		return /** @type {{ value: string }} */ (await unified().use(remarkParse).use(remarkStringify).use(remarkFrontmatter).use(stripMarkdown).process(string)).value
 	}
 }
 

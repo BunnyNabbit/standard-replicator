@@ -159,8 +159,19 @@ export class BaseProgram extends Replicator {
 	 */
 	async getDescription(document) {
 		const frontmatter = await document.frontmatter
-		let description = frontmatter?.description ?? document.content.slice(0, this.maxDescriptionLength)
+		/** @type {string} */
+		let description =
+			frontmatter?.description ??
+			(
+				await /** @type {typeof BaseProgram} */ (this.constructor).parserClass.stripMarkdown(document.content).catch((error) => {
+					return document.content
+				})
+			).slice(0, this.maxDescriptionLength)
+		// FIXME: Doesn't check if frontmatter description was used.
 		if (description.length === this.maxDescriptionLength) description += "..."
+		// HACK: Needs to parse [[Wikilinks|wikilinks]].
+		description = description.replaceAll("\\[\\[", "[[")
+		console.log(description)
 		return description
 	}
 	/**@todo Yet to be documented.
